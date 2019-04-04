@@ -81,50 +81,84 @@ the contents of c
 
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
+-- f a
+-- a -> f ()
 printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile fp c=
+    putStrLn ("============ " ++ fp) >> putStrLn (c)
 
+-- let ab = fp ++ "a"
+--     a = ("=======" ++ ab)
+--     b = putStrLn (a) >> putStrLn (c)
+--  in b
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
 printFiles =
-  error "todo: Course.FileIO#printFiles"
+    void . sequence . (<$>) (uncurry printFile)
 
+-- let a = (<$>) (uncurry printFile) :: List(FilePath, Chars) -> List( IO ())
+--     b = void . sequence :: List(IO a) -> IO ()
+--     c = b . a :: List(FilePath, Chars) -> IO ()
+--     d = c xs
+--  in d
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile fp =
+    (\c -> (fp, c)) <$> (readFile fp)
+  
 
+-- let a = readFile fp
+--     b = (<$>) (\x -> (fp, x)) a
+--  in b
+-- let a = lift2 (<$>) (,) readFile
+--  in a
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
 getFiles =
-  error "todo: Course.FileIO#getFiles"
+    sequence . (<$>) getFile
+  
+-- sequence (map getFile xs)
+--
+-- let a =  map getFile xs 
+--     b = sequence a  
+--  in b
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@ and @printFiles@.
 run ::
   FilePath
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run fp =
+    readFile fp >>= getFiles . lines >>= printFiles
+  
 
+-- let a = readFile fp
+--     b = (>>=) a (\x -> getFiles (lines (x))) 
+--     c = (>>=) b (\xs -> printFiles xs)
+--  in c
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+    let a = getArgs
+        b = a >>= (\xs -> 
+            case xs of 
+              Nil -> putStrLn("No elements")
+              (x :. _) -> run x
+            )
+     in b
 
 ----
 

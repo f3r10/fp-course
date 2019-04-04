@@ -37,7 +37,8 @@ instance Monad ExactlyOne where
     -> ExactlyOne a
     -> ExactlyOne b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance ExactlyOne"
+      bindExactlyOne
+    
 
 -- | Binds a function on a List.
 --
@@ -49,7 +50,7 @@ instance Monad List where
     -> List a
     -> List b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
+    flatMap
 
 -- | Binds a function on an Optional.
 --
@@ -61,7 +62,7 @@ instance Monad Optional where
     -> Optional a
     -> Optional b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
+    bindOptional
 
 -- | Binds a function on the reader ((->) t).
 --
@@ -69,11 +70,11 @@ instance Monad Optional where
 -- 119
 instance Monad ((->) t) where
   (=<<) ::
-    (a -> ((->) t b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
+    (a -> t -> b)
+    -> (t -> a)
+    -> (t -> b)
+  (=<<) atb ta =
+      \t -> atb (ta t) t
 
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
@@ -111,9 +112,12 @@ instance Monad ((->) t) where
   f (a -> b)
   -> f a
   -> f b
-(<**>) =
-  error "todo: Course.Monad#(<**>)"
+(<**>)=
+    (<*>)
 
+-- (<**>) fab fa =
+--     let i =  fab <*> fa
+--         in i
 infixl 4 <**>
 
 -- | Flattens a combined structure to a single structure.
@@ -133,8 +137,9 @@ join ::
   Monad f =>
   f (f a)
   -> f a
-join =
-  error "todo: Course.Monad#join"
+join ffa =
+    let i = (=<<) id ffa
+     in i
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -147,9 +152,12 @@ join =
   f a
   -> (a -> f b)
   -> f b
-(>>=) =
-  error "todo: Course.Monad#(>>=)"
+(>>=) fa afb =
+    join ((<$>) afb fa)
 
+-- (>>=) fa afb i
+--     let i = join ((<$>) afb fai
+--      in i
 infixl 1 >>=
 
 -- | Implement composition within the @Monad@ environment.
@@ -163,9 +171,13 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
-
+(<=<) f g =
+    (=<<) f . g
+--
+-- (=<<) f . g
+-- (<=<) bfc afb a =
+--     let i = (>>=) (afb a) bfc
+--      in i
 infixr 1 <=<
 
 -----------------------
